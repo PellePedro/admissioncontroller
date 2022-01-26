@@ -12,8 +12,8 @@ func validateCreate() mutate.AdmitFunc {
 			return &mutate.Result{Msg: err.Error()}, nil
 		}
 
-		if dp.Namespace == "special" {
-			return &mutate.Result{Msg: "You cannot create a deployment in `special` namespace."}, nil
+		if dp.Namespace == "forbidden" {
+			return &mutate.Result{Msg: "Cannot create a deployment in `forbidden` namespace."}, nil
 		}
 
 		return &mutate.Result{Allowed: true}, nil

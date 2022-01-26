@@ -32,21 +32,21 @@ func mutateCreate() mutate.AdmitFunc {
 			return &mutate.Result{Msg: err.Error()}, nil
 		}
 
-		// Very simple logic to inject a new "sidecar" container.
-		if pod.Namespace == "special" {
+		// Simple logic to inject a new "sidecar" container.
+		if pod.Namespace == "magic" {
 			var containers []v1.Container
 			containers = append(containers, pod.Spec.Containers...)
 			sideC := v1.Container{
 				Name:    "test-sidecar",
 				Image:   "busybox:stable",
-				Command: []string{"sh", "-c", "while true; do echo 'I am a container injected by mutating webhook'; sleep 2; done"},
+				Command: []string{"sh", "-c", "while true; do echo 'Sidecar container injected by mutating webhook'; sleep 2; done"},
 			}
 			containers = append(containers, sideC)
 			operations = append(operations, mutate.ReplacePatchOperation("/spec/containers", containers))
 		}
 
 		// Add a simple annotation using `AddPatchOperation`
-		metadata := map[string]string{"origin": "fromMutation"}
+		metadata := map[string]string{"origin": "tsf-controller"}
 		operations = append(operations, mutate.AddPatchOperation("/metadata/annotations", metadata))
 		return &mutate.Result{
 			Allowed:  true,
