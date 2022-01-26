@@ -1,0 +1,11 @@
+resources:
+- service.yaml
+#- admission.yaml
+- deployment.yaml
+
+patchesStrategicMerge:
+- deployment_cert_patch.yaml
+#- admission_inject_patch.yaml
+
+configurations:
+- kustomizeconfig.yaml

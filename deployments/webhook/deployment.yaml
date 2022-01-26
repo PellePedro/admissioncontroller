@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admission-deployment
+  labels:
+    app: webhook
+spec:
+  selector:
+    matchLabels:
+      app: webhook
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: webhook
+    spec:
+      containers:
+      - name: admission-controller 
+        image: docker.io/pellepedro/controller:latest

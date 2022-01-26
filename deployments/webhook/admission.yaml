@@ -1,0 +1,57 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+  - name: validate
+    admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: webhook-service
+        path: /mutate/pods
+      failurePolicy: Fail
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: pod-validating-webhook-configuration
+webhooks:
+  - admissionReviewVersions:
+      - v1
+    clientConfig:
+      service:
+        name: webhook-service
+        path: /validate/pods
+    failurePolicy: Fail
+    name: pod-validate.oga.org
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: deployment-validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      path: /validate/pods
+  failurePolicy: Fail
+  name: deployments-validate.oga.org
+  rules:
+    - operations: ["CREATE","DELETE"]
+      apiGroups: [""]
+      apiVersions: ["v1"]
+      resources: ["deployments"]
