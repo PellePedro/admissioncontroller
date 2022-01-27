@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: admission-deployment
   labels:
-    app: webhook
+    app: admisssion-controller
 spec:
   selector:
     matchLabels:
-      app: webhook
+      app: admisssion-controller
   replicas: 1
   template:
     metadata:
       labels:
-        app: webhook
+        app: admisssion-controller
     spec:
       containers:
       - name: admission-controller 
