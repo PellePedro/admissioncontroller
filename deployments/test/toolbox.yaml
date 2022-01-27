@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  toolbox
+  namespace: default
+  labels:
+    name: toolbox
+spec:
+  selector:
+    matchLabels:
+      name: toolbox
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: toolbox
+    spec:
+      containers:
+      - name: toolbox
+        image: pellepedro/toolbox:1.0.0
+        command:
+          - sleep
+          - "3600"
