@@ -1,16 +1,11 @@
 # Admission Controller in Kubernetes
 
-## Deploy Cert Manager
+## Start Kind and Deploy Cert Manager
 [Cert-Manager](https://cert-manager.io)
 
 ```
-export CERT_MANAGER_VERSION=1.7.0
-kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v$CERT_MANAGER_VERSION/cert-manager.yaml
-
-kubectl rollout status deploy -n cert-manager cert-manager
-kubectl rollout status deploy -n cert-manager cert-manager-cainjector
-kubectl rollout status deploy -n cert-manager cert-manager-webhook
-
+cd test/config
+./start-cluster.sh
 ```
 
 ## Build Admission Controller
@@ -22,4 +17,10 @@ make push-image
 ## Deploy Manifests
 ```
 kustomize build deployments/default | kubectl apply -f -
+```
+
+## Deploy test Pod
+```
+kubectl apply -f test/deployments/toolbox.yaml
+
 ```
