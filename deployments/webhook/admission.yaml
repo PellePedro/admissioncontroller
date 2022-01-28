@@ -4,14 +4,14 @@ kind: MutatingWebhookConfiguration
 metadata:
   name: mutating-webhook-configuration
 webhooks:
-- admissionReviewVersions:
-    - v1
+- admissionReviewVersions: ["v1"]
+  timeoutSeconds: 2
   clientConfig:
     service:
       name: webhook-service
       path: /mutate/pods
   name: pod-mutate.oga.org
-  failurePolicy: Fail
+  failurePolicy: Ignore
   rules:
     - operations: ["CREATE"]
       apiGroups: [""]
@@ -24,13 +24,13 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: pod-validating-webhook-configuration
 webhooks:
-- admissionReviewVersions:
-    - v1
+- admissionReviewVersions: ["v1"]
+  timeoutSeconds: 2
   clientConfig:
     service:
       name: webhook-service
       path: /validate/pods
-  failurePolicy: Fail
+  failurePolicy: Ignore
   name: pod-validate.oga.org
   rules:
     - operations: ["CREATE"]
@@ -44,13 +44,13 @@ kind: ValidatingWebhookConfiguration
 metadata:
   name: deployment-validating-webhook-configuration
 webhooks:
-- admissionReviewVersions:
-  - v1
+- admissionReviewVersions: ["v1"]
+  timeoutSeconds: 2
   clientConfig:
     service:
       name: webhook-service
-      path: /validate/pods
-  failurePolicy: Fail
+      path: /validate/deployments
+  failurePolicy: Ignore
   name: deployments-validate.oga.org
   rules:
     - operations: ["CREATE","DELETE"]
@@ -58,4 +58,3 @@ webhooks:
       apiVersions: ["v1"]
       resources: ["deployments"]
   sideEffects: None
-
