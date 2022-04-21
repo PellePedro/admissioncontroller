@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	admission "k8s.io/api/admission/v1beta1"
+	log "k8s.io/klog/v2"
 )
 
 // Result contains the result of an admission request
@@ -26,8 +27,10 @@ type Hook struct {
 
 // Execute evaluates the request and try to execute the function for operation specified in the request.
 func (h *Hook) Execute(r *admission.AdmissionRequest) (*Result, error) {
+	log.Info("Executing hook.Execute()")
 	switch r.Operation {
 	case admission.Create:
+		log.Info("operation is [Create]")
 		return wrapperExecution(h.Create, r)
 	case admission.Update:
 		return wrapperExecution(h.Update, r)

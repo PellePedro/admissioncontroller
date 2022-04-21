@@ -1,8 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: magic
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name:  toolbox
-  namespace: default
+  namespace: magic
   labels:
     name: toolbox
 spec:
@@ -17,7 +22,7 @@ spec:
     spec:
       containers:
       - name: toolbox
-        image: pellepedro/toolbox:1.0.0
+        image: busybox
         command:
           - sleep
           - "3600"

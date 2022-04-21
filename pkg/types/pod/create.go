@@ -1,10 +1,12 @@
 package pod
 
 import (
+	"fmt"
 	"strings"
 
 	"k8s.io/api/admission/v1beta1"
 	v1 "k8s.io/api/core/v1"
+	log "k8s.io/klog/v2"
 	"pellep.io/webhook/pkg/mutate"
 )
 
@@ -26,6 +28,8 @@ func validateCreate() mutate.AdmitFunc {
 
 func mutateCreate() mutate.AdmitFunc {
 	return func(r *v1beta1.AdmissionRequest) (*mutate.Result, error) {
+		log.Info("Executing mutateCreate function")
+		fmt.Println("Executing mutateCreate function")
 		var operations []mutate.PatchOperation
 		pod, err := parsePod(r.Object.Raw)
 		if err != nil {
@@ -46,11 +50,16 @@ func mutateCreate() mutate.AdmitFunc {
 		}
 
 		// Add a simple annotation using `AddPatchOperation`
+		log.Info("Adding Patch Operation matadata/labels")
 		metadata := map[string]string{"origin": "tsf-controller"}
-		operations = append(operations, mutate.AddPatchOperation("/metadata/annotations", metadata))
+		operations = append(operations, mutate.AddPatchOperation("/metadata/labels", metadata))
 		return &mutate.Result{
 			Allowed:  true,
 			PatchOps: operations,
 		}, nil
 	}
+}
+
+func init() {
+	fmt.Println("Pod Creation hook")
 }
