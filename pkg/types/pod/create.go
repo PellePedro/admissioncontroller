@@ -42,7 +42,7 @@ func mutateCreate() mutate.AdmitFunc {
 			containers = append(containers, pod.Spec.Containers...)
 			sideC := v1.Container{
 				Name:    "test-sidecar",
-				Image:   "busybox:stable",
+				Image:   "busybox:1.35",
 				Command: []string{"sh", "-c", "while true; do echo 'Sidecar container injected by mutating webhook'; sleep 2; done"},
 			}
 			containers = append(containers, sideC)

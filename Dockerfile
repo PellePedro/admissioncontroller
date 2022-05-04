@@ -1,22 +1,27 @@
-ARG ALPINE_VERSION=3.14
-ARG GO_VERSION=1.17
+ARG GO_VERSION
+FROM golang:${GO_VERSION:-1.17.5-alpine} AS delve
 
-FROM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS builder
+ENV GO111MODULE on
+#
+RUN apk update \
+  && apk add git \
+  && apk add gcc \
+  && apk add libc-dev \
+  && go install github.com/go-delve/delve/cmd/dlv@latest
 
-WORKDIR /build
 
-COPY go.mod go.mod
-COPY go.sum go.sum
+FROM golang:${GO_VERSION:-1.17.5-alpine} AS runner
+
+ENV GO111MODULE on
+ARG BUILD_DIR
+WORKDIR ${BUILD_DIR}
+COPY . ${BUILD_DIR}
 
 RUN go mod download
 
-COPY cmd/ cmd/
-COPY pkg/ pkg/
-
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o controller cmd/main.go
+RUN CGO_ENABLED=0 go get -ldflags "-s -w -extldflags '-static'" github.com/go-delve/delve/cmd/dlv
 
-#----------------------------------------------------------------
-# Controller
-FROM alpine:${ALPINE_VERSION}
-COPY --from=builder /build/controller /usr/local/bin/controller 
-CMD ["/usr/local/bin/controller"]
+RUN CGO_ENABLED=0 go build -gcflags="-N -l" -o /admission-controller ./cmd/main.go
+
+CMD ["sleep", "3600"]

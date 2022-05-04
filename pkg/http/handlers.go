@@ -8,7 +8,6 @@ import (
 
 	"pellep.io/webhook/pkg/mutate"
 
-	"k8s.io/api/admission/v1beta1"
 	admission "k8s.io/api/admission/v1beta1"
 	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,27 +47,28 @@ func (h *admissionHandler) Serve(hook mutate.Hook) http.HandlerFunc {
 			return
 		}
 
-		var review admission.AdmissionReview
-		if _, _, err := h.decoder.Decode(body, nil, &review); err != nil {
+		var admissionReviewReq admission.AdmissionReview
+		if _, _, err := h.decoder.Decode(body, nil, &admissionReviewReq); err != nil {
 			http.Error(w, fmt.Sprintf("could not deserialize request: %v", err), http.StatusBadRequest)
 			return
 		}
 
-		if review.Request == nil {
+		if admissionReviewReq.Request == nil {
 			http.Error(w, "malformed admission review: request is nil", http.StatusBadRequest)
 			return
 		}
 
-		result, err := hook.Execute(review.Request)
+		result, err := hook.Execute(admissionReviewReq.Request)
 		if err != nil {
 			log.Error(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		admissionResponse := v1beta1.AdmissionReview{
-			Response: &v1beta1.AdmissionResponse{
-				UID:     review.Request.UID,
+		admissionResponse := admission.AdmissionReview{
+			TypeMeta: admissionReviewReq.TypeMeta,
+			Response: &admission.AdmissionResponse{
+				UID:     admissionReviewReq.Request.UID,
 				Allowed: result.Allowed,
 				Result:  &meta.Status{Message: result.Msg},
 			},
@@ -91,7 +91,7 @@ func (h *admissionHandler) Serve(hook mutate.Hook) http.HandlerFunc {
 			return
 		}
 
-		log.Infof("Webhook [%s - %s] - Allowed: %t", r.URL.Path, review.Request.Operation, result.Allowed)
+		log.Infof("Webhook [%s - %s] - Allowed: %t", r.URL.Path, admissionReviewReq.Request.Operation, result.Allowed)
 		w.WriteHeader(http.StatusOK)
 		w.Write(res)
 	}

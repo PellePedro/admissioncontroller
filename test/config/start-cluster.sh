@@ -1,7 +1,8 @@
 #!/bin/bash
+CLUSTER_NAME=$1
 set -ex
 
-cat <<EOF | kind create cluster -v7 --wait 1m --retain --config=-
+cat <<EOF | kind create cluster --name=${CLUSTER_NAME} -v7 --wait 1m --retain --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -10,15 +11,17 @@ networking:
   ipFamily: ipv4
 nodes:
 - role: control-plane
-- role: worker
-- role: worker
+  extraPortMappings:
+  - containerPort: 30123 # node port for the delve server
+    hostPort: 30123 # for the communication with delve server
+    protocol: TCP
 - role: worker
   kubeadmConfigPatches:
   - |
     kind: JoinConfiguration
     nodeRegistration:
       kubeletExtraArgs:
-        node-labels: "special-node=true"
+        node-labels: "debug-node=true"
 EOF
 
 kubectl wait --for=condition=ready pods --namespace=kube-system -l k8s-app=kube-dns

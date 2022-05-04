@@ -1,5 +1,5 @@
-IMAGE_REPO ?= docker.io/pellepedro
-IMAGE_NAME ?= controller
+IMAGE_REPO ?= open-grid
+IMAGE_NAME ?= admission-controller
 
 GIT_HOST ?= github.com/pellepedro
 
@@ -12,8 +12,8 @@ export GOPATH ?= $(GOPATH_DEFAULT)
 TESTARGS_DEFAULT := "-v"
 export TESTARGS ?= $(TESTARGS_DEFAULT)
 DEST := $(GOPATH)/src/$(GIT_HOST)/$(BASE_DIR)
-IMAGE_TAG ?= $(shell date +v%Y%m%d)-$(shell git describe --match=$(git rev-parse --short=8 HEAD) --tags --always --dirty)
-
+#IMAGE_TAG ?= $(shell date +v%Y%m%d)-$(shell git describe --match=$(git rev-parse --short=8 HEAD) --tags --always --dirty)
+IMAGE_TAG ?= 0.0.1
 
 LOCAL_OS := $(shell uname)
 ifeq ($(LOCAL_OS),Linux)
@@ -75,15 +75,43 @@ build:
 ############################################################
 # image section
 ############################################################
+KIND_CLUSTER_NAME=kind
 
-image: build-image push-image
+.PHONY: create-cluster
+create-cluster: ## launch kind cluster
+	if [ ! "$(shell kind get clusters | grep $(KIND_CLUSTER_NAME))" ]; then \
+		cd test/config; ./start-cluster.sh ${KIND_CLUSTER_NAME}; \
+	fi
+
+.PHONY: delete-cluster
+delete-cluster: ## delete cluster
+	@kind delete cluster --name ${KIND_CLUSTER_NAME}
+
+deploy-admission-controller: ## Deploy admission controller
+    # cd deployments/webhook && $(KUSTOMIZE) edit set image =${IMG_NAME}:${IMAGE_TAG}
+	@kubectl create ns tsf-system
+	@kustomize build deployments/default | kubectl apply -f -
+
+image: build-image load-image
+
+build-arg:=--build-arg BUILD_DIR=/go/src/pellep.io/webhook 
 
 .PHONY: bundle-image
-build-image: ## Build Image
+build-image: ## Build Container Image
 	@echo "Building the docker image: $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)..."
-	@docker build -t $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) .
+	##@docker rmi $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
+	@docker build --progress plain --force-rm  $(build-arg) -t $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
-push-image: build-image
+
+.PHONY: load-image
+load-image: ## Load Conttainer Image to Kind Cluster
+	@echo "Loading $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) to kind cluster"
+	@kind load docker-image --name ${KIND_CLUSTER_NAME}  $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) 
+
+run-image: ## Run Conttainer
+	@docker run -it $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) ash
+
+push-image: push-image ## Push Image to remote repository
 	@echo "Pushing the docker image for $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) and $(IMAGE_REPO)/$(IMAGE_NAME):latest..."
 	@docker tag $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) $(IMAGE_REPO)/$(IMAGE_NAME):latest
 	@docker push $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
@@ -95,4 +123,4 @@ push-image: build-image
 clean:
 	@rm -rf bin
 
-.PHONY: all fmt help build
+.PHONY: all fmt help build create-cluster delete-cluster build-image load-image push-image

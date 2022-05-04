@@ -14,7 +14,8 @@ spec:
       labels:
         app: admisssion-controller
     spec:
+      nodeName: kind-worker3
       containers:
       - name: admission-controller 
-        image: docker.io/pellepedro/controller:latest
-        imagePullPolicy: Always
+        image: open-grid/admission-controller:0.0.1
+        imagePullPolicy: IfNotPresent
