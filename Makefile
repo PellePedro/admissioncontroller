@@ -99,17 +99,17 @@ build-arg:=--build-arg BUILD_DIR=/go/src/pellep.io/webhook
 .PHONY: bundle-image
 build-image: ## Build Container Image
 	@echo "Building the docker image: $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)..."
-	##@docker rmi $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
 	@docker build --progress plain --force-rm  $(build-arg) -t $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) . 
 
+.PHONY: run-image
+run-image: ## Test Run Container Image with docker
+	@echo "Test running the docker image: $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)..."
+	@docker run --rm $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
 
 .PHONY: load-image
 load-image: ## Load Conttainer Image to Kind Cluster
 	@echo "Loading $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) to kind cluster"
 	@kind load docker-image --name ${KIND_CLUSTER_NAME}  $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) 
-
-run-image: ## Run Conttainer
-	@docker run -it $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) ash
 
 push-image: push-image ## Push Image to remote repository
 	@echo "Pushing the docker image for $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) and $(IMAGE_REPO)/$(IMAGE_NAME):latest..."
@@ -118,9 +118,27 @@ push-image: push-image ## Push Image to remote repository
 	@docker push $(IMAGE_REPO)/$(IMAGE_NAME):latest
 
 ############################################################
+# Toolbox Container
+############################################################
+
+TOOLBOX_IMG=toolbox:0.0.1
+
+.PHONY: build-toolbox-image
+build-toolbox-image: ## Build and deploy toolbox image
+	@docker build --progress plain --force-rm  -t $(TOOLBOX_IMG) -f Dockerfile.toolbox .
+	@kind load docker-image $(TOOLBOX_IMG)
+
+############################################################
 # clean section
 ############################################################
 clean:
 	@rm -rf bin
+
+.PHONY: clearclean
+clearclean: ## Clean all terminated containers and interim builds
+	@echo "Clean untaged images and stoped containers..."
+	@docker ps -a | grep "Exited" | awk '{print $$1}' | sort -u | xargs -L 1 docker rm
+	@docker images | grep '<none>' | awk '{print $$3}' | sort -u | xargs -L 1 docker rmi -f
+
 
 .PHONY: all fmt help build create-cluster delete-cluster build-image load-image push-image

@@ -82,6 +82,8 @@ func (h *admissionHandler) Serve(hook mutate.Hook) http.HandlerFunc {
 				http.Error(w, fmt.Sprintf("could not marshal JSON patch: %v", err), http.StatusInternalServerError)
 			}
 			admissionResponse.Response.Patch = patchBytes
+			pt := admission.PatchTypeJSONPatch
+			admissionResponse.Response.PatchType = &pt
 		}
 
 		res, err := json.Marshal(admissionResponse)

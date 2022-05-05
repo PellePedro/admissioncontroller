@@ -3,18 +3,17 @@ kind: Deployment
 metadata:
   name: admission-deployment
   labels:
-    app: admisssion-controller
+    app: admission-controller
 spec:
   selector:
     matchLabels:
-      app: admisssion-controller
+      app: admission-controller
   replicas: 1
   template:
     metadata:
       labels:
-        app: admisssion-controller
+        app: admission-controller
     spec:
-      nodeName: kind-worker3
       containers:
       - name: admission-controller 
         image: open-grid/admission-controller:0.0.1

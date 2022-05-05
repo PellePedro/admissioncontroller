@@ -8,4 +8,4 @@ spec:
       protocol: TCP
       targetPort: 8443
   selector:
-    app: admisssion-controller
+    app: admission-controller

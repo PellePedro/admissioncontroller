@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: toolbox
-        image: busybox
+        image: toolbox:0.0.1
         command:
           - sleep
           - "3600"

@@ -11,6 +11,8 @@ networking:
   ipFamily: ipv4
 nodes:
 - role: control-plane
+- role: worker
+- role: worker
   extraPortMappings:
   - containerPort: 30123 # node port for the delve server
     hostPort: 30123 # for the communication with delve server
